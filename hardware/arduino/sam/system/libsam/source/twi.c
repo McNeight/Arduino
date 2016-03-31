@@ -96,24 +96,28 @@
  */
 void TWI_ConfigureMaster( Twi* pTwi, uint32_t dwTwCk, uint32_t dwMCk )
 {
-    uint32_t dwCkDiv = 0 ;
-    uint32_t dwClDiv ;
-    uint32_t dwOk = 0 ;
-
     assert( pTwi ) ;
 
     /* SVEN: TWI Slave Mode Enabled */
     pTwi->TWI_CR = TWI_CR_SVEN ;
-    /* Reset the TWI */
-    pTwi->TWI_CR = TWI_CR_SWRST ;
-    pTwi->TWI_RHR ;
 
-    /* TWI Slave Mode Disabled, TWI Master Mode Disabled. */
-    pTwi->TWI_CR = TWI_CR_SVDIS ;
-    pTwi->TWI_CR = TWI_CR_MSDIS ;
+    TWI_Disable(pTwi);
 
     /* Set master mode */
     pTwi->TWI_CR = TWI_CR_MSEN ;
+
+    /* Configure clock */
+    TWI_SetClock(pTwi, dwTwCk, dwMCk);
+}
+
+
+void TWI_SetClock( Twi *pTwi, uint32_t dwTwCk, uint32_t dwMCk )
+{
+    assert( pTwi ) ;
+
+    uint32_t dwCkDiv = 0 ;
+    uint32_t dwClDiv ;
+    uint32_t dwOk = 0 ;
 
     /* Configure clock */
     while ( !dwOk )
@@ -137,6 +141,7 @@ void TWI_ConfigureMaster( Twi* pTwi, uint32_t dwTwCk, uint32_t dwMCk )
     pTwi->TWI_CWGR = (dwCkDiv << 16) | (dwClDiv << 8) | dwClDiv ;
 }
 
+
 /**
  * \brief Configures a TWI peripheral to operate in slave mode.
  * \param pTwi  Pointer to an Twi instance.
@@ -146,15 +151,7 @@ void TWI_ConfigureSlave(Twi *pTwi, uint8_t slaveAddress)
 {
     uint32_t i;
 
-    /* TWI software reset */
-    pTwi->TWI_CR = TWI_CR_SWRST;
-    pTwi->TWI_RHR;
-
-    /* Wait at least 10 ms */
-    for (i=0; i < 1000000; i++);
-
-    /* TWI Slave Mode Disabled, TWI Master Mode Disabled*/
-    pTwi->TWI_CR = TWI_CR_SVDIS | TWI_CR_MSDIS;
+    TWI_Disable(pTwi);
 
     /* Configure slave address. */
     pTwi->TWI_SMR = 0;
@@ -166,6 +163,27 @@ void TWI_ConfigureSlave(Twi *pTwi, uint8_t slaveAddress)
     /* Wait at least 10 ms */
     for (i=0; i < 1000000; i++);
     assert( (pTwi->TWI_CR & TWI_CR_SVDIS)!= TWI_CR_SVDIS ) ;
+}
+
+/**
+ * \brief Disables the TWI.
+ * \param pTwi  Pointer to an Twi instance.
+ */
+void TWI_Disable(Twi *pTwi)
+{
+    assert( pTwi ) ;
+
+    uint32_t i;
+
+    /* TWI software reset */
+    pTwi->TWI_CR = TWI_CR_SWRST;
+    pTwi->TWI_RHR;
+
+    /* Wait at least 10 ms */
+    for (i=0; i < 1000000; i++);
+
+    /* TWI Slave Mode Disabled, TWI Master Mode Disabled*/
+    pTwi->TWI_CR = TWI_CR_SVDIS | TWI_CR_MSDIS;
 }
 
 /**

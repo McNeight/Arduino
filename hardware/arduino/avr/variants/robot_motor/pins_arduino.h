@@ -19,8 +19,6 @@
   Public License along with this library; if not, write to the
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
-
-  $Id: pins_arduino.h 1 2013-03-16 20:47:51Z cuartielles $
 */
 
 #ifndef Pins_Arduino_h
@@ -88,6 +86,8 @@ static const uint8_t TK4 = 12;   	// A11
 //	__AVR_ATmega32U4__ has an unusual mapping of pins to channels
 extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 #define analogPinToChannel(P)  ( pgm_read_byte( analog_pin_to_channel_PGM + (P) ) )
+
+#define digitalPinToInterrupt(p) ((p) == 0 ? 2 : ((p) == 1 ? 3 : ((p) == 2 ? 1 : ((p) == 3 ? 0 : ((p) == 7 ? 4 : NOT_AN_INTERRUPT)))))
 
 #ifdef ARDUINO_MAIN
 
@@ -273,4 +273,24 @@ const uint8_t PROGMEM analog_pin_to_channel_PGM[12] = {
 };
 
 #endif /* ARDUINO_MAIN */
+
+// These serial port names are intended to allow libraries and architecture-neutral
+// sketches to automatically default to the correct port name for a particular type
+// of use.  For example, a GPS module would normally connect to SERIAL_PORT_HARDWARE_OPEN,
+// the first hardware serial port whose RX/TX pins are not dedicated to another use.
+//
+// SERIAL_PORT_MONITOR        Port which normally prints to the Arduino Serial Monitor
+//
+// SERIAL_PORT_USBVIRTUAL     Port which is USB virtual serial
+//
+// SERIAL_PORT_LINUXBRIDGE    Port which connects to a Linux system via Bridge library
+//
+// SERIAL_PORT_HARDWARE       Hardware serial port, physical RX & TX pins.
+//
+// SERIAL_PORT_HARDWARE_OPEN  Hardware serial ports which are open for use.  Their RX & TX
+//                            pins are NOT connected to anything by default.
+#define SERIAL_PORT_MONITOR        Serial
+#define SERIAL_PORT_USBVIRTUAL     Serial
+#define SERIAL_PORT_HARDWARE       Serial1
+
 #endif /* Pins_Arduino_h */

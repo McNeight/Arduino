@@ -72,7 +72,6 @@ pmc.o:
 00000000 T pmc_switch_udpck_to_upllck
 
 pwmc.o:
-00000000 r C.18.4409
 00000000 t FindClockConfiguration
 00000000 T PWMC_ConfigureChannel
 00000000 T PWMC_ConfigureChannelExt
@@ -100,14 +99,14 @@ pwmc.o:
 00000000 T PWMC_SetSyncChannelUpdateUnlock
 00000000 T PWMC_WriteBuffer
          U __assert_func
-00000000 r __func__.4405
-00000000 r __func__.4429
-00000000 r __func__.4463
-00000000 r __func__.4509
-00000000 r __func__.4542
-00000000 r __func__.4563
-00000000 r __func__.4712
-00000000 r __func__.4726
+00000000 r __func__.6793
+00000000 r __func__.6804
+00000000 r __func__.6819
+00000000 r __func__.6830
+00000000 r __func__.6841
+00000000 r __func__.6848
+00000000 r __func__.6932
+00000000 r __func__.6938
 
 rtc.o:
 00000000 T RTC_ClearSCCR
@@ -123,9 +122,9 @@ rtc.o:
 00000000 T RTC_SetTime
 00000000 T RTC_SetTimeAlarm
          U __assert_func
-00000000 r __func__.4402
-00000000 r __func__.4415
-00000000 r __func__.4423
+00000000 r __func__.6790
+00000000 r __func__.6799
+00000000 r __func__.6804
 
 rtt.o:
 00000000 T RTT_EnableIT
@@ -134,8 +133,8 @@ rtt.o:
 00000000 T RTT_SetAlarm
 00000000 T RTT_SetPrescaler
          U __assert_func
-00000000 r __func__.4412
-00000000 r __func__.4426
+00000000 r __func__.6797
+00000000 r __func__.6805
 
 spi.o:
 00000000 T SPI_Configure
@@ -161,9 +160,9 @@ tc.o:
 00000000 T TC_Start
 00000000 T TC_Stop
          U __assert_func
-00000000 r __func__.4404
-00000000 r __func__.4415
-00000000 r __func__.4425
+00000000 r __func__.6792
+00000000 r __func__.6798
+00000000 r __func__.6804
 
 timetick.o:
 00000000 T GetTickCount
@@ -178,30 +177,34 @@ twi.o:
 00000000 T TWI_ByteSent
 00000000 T TWI_ConfigureMaster
 00000000 T TWI_ConfigureSlave
+00000000 T TWI_Disable
 00000000 T TWI_DisableIt
 00000000 T TWI_EnableIt
 00000000 T TWI_GetMaskedStatus
 00000000 T TWI_GetStatus
 00000000 T TWI_ReadByte
 00000000 T TWI_SendSTOPCondition
+00000000 T TWI_SetClock
 00000000 T TWI_StartRead
 00000000 T TWI_StartWrite
 00000000 T TWI_Stop
 00000000 T TWI_TransferComplete
 00000000 T TWI_WriteByte
          U __assert_func
-00000000 r __func__.4770
-00000000 r __func__.4801
-00000000 r __func__.4814
-00000000 r __func__.4823
-00000000 r __func__.4845
-00000000 r __func__.4854
-00000000 r __func__.4865
-00000000 r __func__.4904
-00000000 r __func__.4914
-00000000 r __func__.4923
-00000000 r __func__.4931
-00000000 r __func__.4939
+00000000 r __func__.7151
+00000000 r __func__.7157
+00000000 r __func__.7172
+00000000 r __func__.7176
+00000000 r __func__.7184
+00000000 r __func__.7191
+00000000 r __func__.7195
+00000000 r __func__.7200
+00000000 r __func__.7208
+00000000 r __func__.7222
+00000000 r __func__.7227
+00000000 r __func__.7231
+00000000 r __func__.7236
+00000000 r __func__.7240
 
 usart.o:
 00000000 T USART_Configure
@@ -220,7 +223,7 @@ usart.o:
 00000000 T USART_Write
 00000000 T USART_WriteBuffer
          U __assert_func
-00000000 r __func__.4778
+00000000 r __func__.7068
 
 wdt.o:
 00000000 T WDT_Disable
@@ -482,12 +485,12 @@ efc.o:
 00000000 T efc_get_wait_state
 00000000 T efc_init
 00000000 T efc_perform_command
-00000074 T efc_perform_fcr
+0000006c T efc_perform_fcr
 00000000 T efc_perform_read_sequence
 00000000 T efc_set_flash_access_mode
 00000000 T efc_set_wait_state
-00000070 T efc_write_fmr
-00000000 b iap_perform_command.4696
+00000068 T efc_write_fmr
+00000000 b iap_perform_command.7049
 
 gpbr.o:
 00000000 T gpbr_read
@@ -552,7 +555,6 @@ rstc.o:
 00000000 T rstc_start_software_reset
 
 emac.o:
-00000000 t T.43
 00000000 t circ_inc
 00000000 T emac_dev_get_tx_load
 00000000 T emac_dev_init

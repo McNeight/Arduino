@@ -1,5 +1,6 @@
 /*
-  Copyright (c) 2012 Arduino.  All right reserved.
+  Arduino.h - Main include file for the Arduino SDK
+  Copyright (c) 2005-2013 Arduino Team.  All right reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -8,8 +9,8 @@
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  See the GNU Lesser General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
   License along with this library; if not, write to the Free Software
@@ -31,6 +32,7 @@
 #include <avr/interrupt.h>
 
 #include "binary.h"
+#include "itoa.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -51,19 +53,10 @@ void yield(void);
 extern void setup( void ) ;
 extern void loop( void ) ;
 
-// Get the bit location within the hardware port of the given virtual pin.
-// This comes from the pins_*.c file for the active board configuration.
-//
-#define digitalPinToPort(P)        ( g_APinDescription[P].pPort )
-#define digitalPinToBitMask(P)     ( g_APinDescription[P].ulPin )
-#define digitalPinToTimer(P)       (  )
-//#define analogInPinToBit(P)        ( )
-#define portOutputRegister(port)   ( &(port->PIO_ODSR) )
-#define portInputRegister(port)    ( &(port->PIO_PDSR) )
-//#define portModeRegister(P)        (  )
-
 //#define NOT_A_PIN 0  // defined in pio.h/EPioType
 #define NOT_A_PORT           0
+
+#define NOT_AN_INTERRUPT -1
 
 typedef enum _EExt_Interrupts
 {
@@ -162,6 +155,16 @@ typedef enum _ETCChannel
 #define PIN_ATTR_PWM           (1UL<<3)
 #define PIN_ATTR_TIMER         (1UL<<4)
 
+#define PIN_STATUS_DIGITAL_INPUT_PULLUP  (0x01)
+#define PIN_STATUS_DIGITAL_INPUT         (0x02)
+#define PIN_STATUS_DIGITAL_OUTPUT        (0x03)
+#define PIN_STATUS_ANALOG                (0x04)
+#define PIN_STATUS_PWM                   (0x05)
+#define PIN_STATUS_TIMER                 (0x06)
+#define PIN_STATUS_SERIAL                (0x07)
+#define PIN_STATUS_DW_LOW                (0x10)
+#define PIN_STATUS_DW_HIGH               (0x11)
+
 /* Types used for the tables below */
 typedef struct _PinDescription
 {
@@ -176,6 +179,8 @@ typedef struct _PinDescription
   EPWMChannel ulPWMChannel ;
   ETCChannel ulTCChannel ;
 } PinDescription ;
+
+extern uint8_t g_pinStatus[];
 
 /* Pins table to be instanciated into variant.cpp */
 extern const PinDescription g_APinDescription[] ;
@@ -200,6 +205,8 @@ extern const PinDescription g_APinDescription[] ;
 #include "wiring_analog.h"
 #include "wiring_shift.h"
 #include "WInterrupts.h"
+
+#include "watchdog.h"
 
 // USB Device
 #define USB_VID            0x2341 // arduino LLC vid

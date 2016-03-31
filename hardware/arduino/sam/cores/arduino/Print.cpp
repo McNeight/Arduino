@@ -17,6 +17,7 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  
  Modified 23 November 2006 by David A. Mellis
+ Modified 03 August 2015 by Chuck Todd
  */
 
 #include <stdlib.h>
@@ -34,7 +35,8 @@ size_t Print::write(const uint8_t *buffer, size_t size)
 {
   size_t n = 0;
   while (size--) {
-    n += write(*buffer++);
+    if (write(*buffer++)) n++;
+    else break;
   }
   return n;
 }
@@ -46,11 +48,7 @@ size_t Print::print(const __FlashStringHelper *ifsh)
 
 size_t Print::print(const String &s)
 {
-  size_t n = 0;
-  for (uint16_t i = 0; i < s.length(); i++) {
-    n += write(s[i]);
-  }
-  return n;
+  return write(s.c_str(), s.length());
 }
 
 size_t Print::print(const char str[])
@@ -119,9 +117,7 @@ size_t Print::print(const Printable& x)
 
 size_t Print::println(void)
 {
-  size_t n = print('\r');
-  n += print('\n');
-  return n;
+  return write("\r\n");
 }
 
 size_t Print::println(const String &s)

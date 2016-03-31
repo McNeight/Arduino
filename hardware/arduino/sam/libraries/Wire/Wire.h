@@ -1,6 +1,6 @@
 /*
  * TwoWire.h - TWI/I2C library for Arduino Due
- * Copyright (c) 2011 Cristian Maglie <c.maglie@bug.st>.
+ * Copyright (c) 2011 Cristian Maglie <c.maglie@arduino.cc>
  * All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,18 +29,24 @@
 
 #define BUFFER_LENGTH 32
 
+ // WIRE_HAS_END means Wire has end()
+#define WIRE_HAS_END 1
+
 class TwoWire : public Stream {
 public:
-	TwoWire(Twi *twi, void(*begin_cb)(void));
+	TwoWire(Twi *twi, void(*begin_cb)(void), void(*end_cb)(void));
 	void begin();
 	void begin(uint8_t);
 	void begin(int);
+	void end();
+	void setClock(uint32_t);
 	void beginTransmission(uint8_t);
 	void beginTransmission(int);
 	uint8_t endTransmission(void);
     uint8_t endTransmission(uint8_t);
 	uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);
+	uint8_t requestFrom(uint8_t, uint8_t, uint32_t, uint8_t, uint8_t);
 	uint8_t requestFrom(int, int);
     uint8_t requestFrom(int, int, int);
 	virtual size_t write(uint8_t);
@@ -83,6 +89,9 @@ private:
 	// Called before initialization
 	void (*onBeginCallback)(void);
 
+	// Called after deinitialization
+	void (*onEndCallback)(void);
+
 	// TWI instance
 	Twi *twi;
 
@@ -100,6 +109,7 @@ private:
 
 	// TWI clock frequency
 	static const uint32_t TWI_CLOCK = 100000;
+	uint32_t twiClock;
 
 	// Timeouts (
 	static const uint32_t RECV_TIMEOUT = 100000;

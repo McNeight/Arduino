@@ -18,33 +18,32 @@
 
 package processing.app;
 
-import processing.core.PApplet;
+import cc.arduino.packages.BoardPort;
+import processing.app.legacy.PApplet;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import static processing.app.I18n._;
+import static processing.app.I18n.tr;
 
-public class SerialMonitor extends AbstractMonitor {
+@SuppressWarnings("serial")
+public class SerialMonitor extends AbstractTextMonitor {
 
-  private final String port;
   private Serial serial;
   private int serialRate;
 
-  public SerialMonitor(String port) {
+  public SerialMonitor(BoardPort port) {
     super(port);
 
-    this.port = port;
-
-    serialRate = Preferences.getInteger("serial.debug_rate");
-    serialRates.setSelectedItem(serialRate + " " + _("baud"));
+    serialRate = PreferencesData.getInteger("serial.debug_rate");
+    serialRates.setSelectedItem(serialRate + " " + tr("baud"));
     onSerialRateChange(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         String wholeString = (String) serialRates.getSelectedItem();
         String rateString = wholeString.substring(0, wholeString.indexOf(' '));
         serialRate = Integer.parseInt(rateString);
-        Preferences.set("serial.debug_rate", rateString);
+        PreferencesData.set("serial.debug_rate", rateString);
         try {
           close();
           Thread.sleep(100); // Wait for serial port to properly close
@@ -78,29 +77,37 @@ public class SerialMonitor extends AbstractMonitor {
           s += "\r\n";
           break;
       }
-      if ("".equals(s) && lineEndings.getSelectedIndex() == 0 && !Preferences.has("runtime.line.ending.alert.notified")) {
+      if ("".equals(s) && lineEndings.getSelectedIndex() == 0 && !PreferencesData.has("runtime.line.ending.alert.notified")) {
         noLineEndingAlert.setForeground(Color.RED);
-        Preferences.set("runtime.line.ending.alert.notified", "true");
+        PreferencesData.set("runtime.line.ending.alert.notified", "true");
       }
       serial.write(s);
     }
   }
 
   public void open() throws Exception {
+    super.open();
+
     if (serial != null) return;
 
-    serial = new Serial(port, serialRate);
-    serial.addListener(this);
+    serial = new Serial(getBoardPort().getAddress(), serialRate) {
+      @Override
+      protected void message(char buff[], int n) {
+        addToUpdateBuffer(buff, n);
+      }
+    };
   }
 
   public void close() throws Exception {
+    super.close();
     if (serial != null) {
       int[] location = getPlacement();
       String locationStr = PApplet.join(PApplet.str(location), ",");
-      Preferences.set("last.serial.location", locationStr);
+      PreferencesData.set("last.serial.location", locationStr);
       textArea.setText("");
       serial.dispose();
       serial = null;
     }
   }
+  
 }

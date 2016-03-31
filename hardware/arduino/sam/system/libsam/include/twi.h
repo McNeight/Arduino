@@ -67,7 +67,11 @@
 
 extern void TWI_ConfigureMaster(Twi *pTwi, uint32_t twck, uint32_t mck);
 
+extern void TWI_SetClock( Twi *pTwi, uint32_t dwTwCk, uint32_t dwMCk );
+
 extern void TWI_ConfigureSlave(Twi *pTwi, uint8_t slaveAddress);
+
+extern void TWI_Disable(Twi *pTwi);
 
 extern void TWI_Stop(Twi *pTwi);
 

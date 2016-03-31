@@ -12,7 +12,7 @@ extern "C" {
 #include "EthernetServer.h"
 #include "Dns.h"
 
-uint16_t EthernetClient::_srcport = 1024;
+uint16_t EthernetClient::_srcport = 49152;      //Use IANA recommended ephemeral port range 49152-65535
 
 EthernetClient::EthernetClient() : _sock(MAX_SOCK_NUM) {
 }
@@ -40,7 +40,7 @@ int EthernetClient::connect(IPAddress ip, uint16_t port) {
     return 0;
 
   for (int i = 0; i < MAX_SOCK_NUM; i++) {
-    uint8_t s = W5100.readSnSR(i);
+    uint8_t s = socketStatus(i);
     if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT || s == SnSR::CLOSE_WAIT) {
       _sock = i;
       break;
@@ -51,7 +51,7 @@ int EthernetClient::connect(IPAddress ip, uint16_t port) {
     return 0;
 
   _srcport++;
-  if (_srcport == 0) _srcport = 1024;
+  if (_srcport == 0) _srcport = 49152;          //Use IANA recommended ephemeral port range 49152-65535
   socket(_sock, SnMR::TCP, _srcport, 0);
 
   if (!::connect(_sock, rawIPAddress(ip), port)) {
@@ -88,7 +88,7 @@ size_t EthernetClient::write(const uint8_t *buf, size_t size) {
 
 int EthernetClient::available() {
   if (_sock != MAX_SOCK_NUM)
-    return W5100.getRXReceivedSize(_sock);
+    return recvAvailable(_sock);
   return 0;
 }
 
@@ -131,12 +131,17 @@ void EthernetClient::stop() {
   disconnect(_sock);
   unsigned long start = millis();
 
-  // wait a second for the connection to close
-  while (status() != SnSR::CLOSED && millis() - start < 1000)
+  // wait up to a second for the connection to close
+  uint8_t s;
+  do {
+    s = status();
+    if (s == SnSR::CLOSED)
+      break; // exit the loop
     delay(1);
+  } while (millis() - start < 1000);
 
   // if it hasn't closed, close it forcefully
-  if (status() != SnSR::CLOSED)
+  if (s != SnSR::CLOSED)
     close(_sock);
 
   EthernetClass::_server_port[_sock] = 0;
@@ -145,7 +150,7 @@ void EthernetClient::stop() {
 
 uint8_t EthernetClient::connected() {
   if (_sock == MAX_SOCK_NUM) return 0;
-  
+
   uint8_t s = status();
   return !(s == SnSR::LISTEN || s == SnSR::CLOSED || s == SnSR::FIN_WAIT ||
     (s == SnSR::CLOSE_WAIT && !available()));
@@ -153,7 +158,7 @@ uint8_t EthernetClient::connected() {
 
 uint8_t EthernetClient::status() {
   if (_sock == MAX_SOCK_NUM) return SnSR::CLOSED;
-  return W5100.readSnSR(_sock);
+  return socketStatus(_sock);
 }
 
 // the next function allows us to use the client returned by
@@ -161,4 +166,12 @@ uint8_t EthernetClient::status() {
 
 EthernetClient::operator bool() {
   return _sock != MAX_SOCK_NUM;
+}
+
+bool EthernetClient::operator==(const EthernetClient& rhs) {
+  return _sock == rhs._sock && _sock != MAX_SOCK_NUM && rhs._sock != MAX_SOCK_NUM;
+}
+
+uint8_t EthernetClient::getSocketNumber() {
+  return _sock;
 }

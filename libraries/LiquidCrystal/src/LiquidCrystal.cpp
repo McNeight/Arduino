@@ -67,13 +67,6 @@ void LiquidCrystal::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t en
   _data_pins[6] = d6;
   _data_pins[7] = d7; 
 
-  pinMode(_rs_pin, OUTPUT);
-  // we can save 1 pin by not using RW. Indicate by passing 255 instead of pin#
-  if (_rw_pin != 255) { 
-    pinMode(_rw_pin, OUTPUT);
-  }
-  pinMode(_enable_pin, OUTPUT);
-  
   if (fourbitmode)
     _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
   else 
@@ -87,16 +80,30 @@ void LiquidCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
     _displayfunction |= LCD_2LINE;
   }
   _numlines = lines;
-  _currline = 0;
+
+  setRowOffsets(0x00, 0x40, 0x00 + cols, 0x40 + cols);  
 
   // for some 1 line displays you can select a 10 pixel high font
-  if ((dotsize != 0) && (lines == 1)) {
+  if ((dotsize != LCD_5x8DOTS) && (lines == 1)) {
     _displayfunction |= LCD_5x10DOTS;
   }
 
+  pinMode(_rs_pin, OUTPUT);
+  // we can save 1 pin by not using RW. Indicate by passing 255 instead of pin#
+  if (_rw_pin != 255) { 
+    pinMode(_rw_pin, OUTPUT);
+  }
+  pinMode(_enable_pin, OUTPUT);
+  
+  // Do these once, instead of every time a character is drawn for speed reasons.
+  for (int i=0; i<((_displayfunction & LCD_8BITMODE) ? 8 : 4); ++i)
+  {
+    pinMode(_data_pins[i], OUTPUT);
+   } 
+
   // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
   // according to datasheet, we need at least 40ms after power rises above 2.7V
-  // before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
+  // before sending commands. Arduino can turn on way before 4.5V so we'll wait 50
   delayMicroseconds(50000); 
   // Now we pull both RS and R/W low to begin commands
   digitalWrite(_rs_pin, LOW);
@@ -157,6 +164,14 @@ void LiquidCrystal::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 
 }
 
+void LiquidCrystal::setRowOffsets(int row0, int row1, int row2, int row3)
+{
+  _row_offsets[0] = row0;
+  _row_offsets[1] = row1;
+  _row_offsets[2] = row2;
+  _row_offsets[3] = row3;
+}
+
 /********** high level commands, for the user! */
 void LiquidCrystal::clear()
 {
@@ -172,12 +187,15 @@ void LiquidCrystal::home()
 
 void LiquidCrystal::setCursor(uint8_t col, uint8_t row)
 {
-  int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+  const size_t max_lines = sizeof(_row_offsets) / sizeof(*_row_offsets);
+  if ( row >= max_lines ) {
+    row = max_lines - 1;    // we count rows starting w/0
+  }
   if ( row >= _numlines ) {
-    row = _numlines-1;    // we count rows starting w/0
+    row = _numlines - 1;    // we count rows starting w/0
   }
   
-  command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+  command(LCD_SETDDRAMADDR | (col + _row_offsets[row]));
 }
 
 // Turn the display on/off (quickly)
@@ -293,7 +311,6 @@ void LiquidCrystal::pulseEnable(void) {
 
 void LiquidCrystal::write4bits(uint8_t value) {
   for (int i = 0; i < 4; i++) {
-    pinMode(_data_pins[i], OUTPUT);
     digitalWrite(_data_pins[i], (value >> i) & 0x01);
   }
 
@@ -302,7 +319,6 @@ void LiquidCrystal::write4bits(uint8_t value) {
 
 void LiquidCrystal::write8bits(uint8_t value) {
   for (int i = 0; i < 8; i++) {
-    pinMode(_data_pins[i], OUTPUT);
     digitalWrite(_data_pins[i], (value >> i) & 0x01);
   }
   

@@ -46,7 +46,7 @@ extern "C" {
  * @{
  */
 
-#if SAM3S_SERIES || SAM4S_SERIES || SAM3N_SERIES || SAM3XA_SERIES
+#if SAM3S_SERIES || SAM4S_SERIES || SAM3N_SERIES
 /**
  * \brief Initialize the given ADC with the specified ADC clock and startup time.
  *
@@ -78,6 +78,55 @@ uint32_t adc_init(Adc *p_adc, const uint32_t ul_mck,
 	p_adc->ADC_MR |= ADC_MR_PRESCAL(ul_prescal) |
 			((uc_startup << ADC_MR_STARTUP_Pos) &
 			ADC_MR_STARTUP_Msk);
+	return 0;
+}
+#elif SAM3XA_SERIES
+/**
+ * \brief Initialize the given ADC with the specified ADC clock and startup time.
+ *
+ * \param p_adc Pointer to an ADC instance.
+ * \param ul_mck Main clock of the device (value in Hz).
+ * \param ul_adc_clock Analog-to-Digital conversion clock (value in Hz).
+ * \param uc_startup ADC start up time. Please refer to the product datasheet
+ * for details.
+ *
+ * \return 0 on success.
+ */
+uint32_t adc_init(Adc *p_adc, const uint32_t ul_mck,
+		const uint32_t ul_adc_clock, const uint8_t uc_startuptime)
+{
+	uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
+	uint32_t ul_prescal, ul_startup,  ul_mr_startup, ul_real_adc_clock;
+	p_adc->ADC_CR = ADC_CR_SWRST;
+
+	/* Reset Mode Register. */
+	p_adc->ADC_MR = 0;
+
+	/* Reset PDC transfer. */
+	p_adc->ADC_PTCR = (ADC_PTCR_RXTDIS | ADC_PTCR_TXTDIS);
+	p_adc->ADC_RCR = 0;
+	p_adc->ADC_RNCR = 0;
+	if (ul_mck % (2 * ul_adc_clock)) {
+		// Division with reminder
+		ul_prescal = ul_mck / (2 * ul_adc_clock);
+	} else {
+		// Whole division
+		ul_prescal = ul_mck / (2 * ul_adc_clock) - 1;
+	}
+	ul_real_adc_clock = ul_mck / (2 * (ul_prescal + 1));
+
+	// ADC clocks needed to get ul_startuptime uS
+	ul_startup = (ul_real_adc_clock / 1000000) * uc_startuptime;
+
+	// Find correct MR_STARTUP value from conversion table
+	for (ul_mr_startup=0; ul_mr_startup<16; ul_mr_startup++) {
+		if (startup_table[ul_mr_startup] >= ul_startup)
+			break;
+	}
+	if (ul_mr_startup==16)
+		return -1;
+	p_adc->ADC_MR |= ADC_MR_PRESCAL(ul_prescal) |
+			((ul_mr_startup << ADC_MR_STARTUP_Pos) & ADC_MR_STARTUP_Msk);
 	return 0;
 }
 #elif SAM3U_SERIES
@@ -143,18 +192,39 @@ void adc_set_resolution(Adc *p_adc,const enum adc_resolution_t resolution)
 void adc_configure_trigger(Adc *p_adc, const enum adc_trigger_t trigger,
 		uint8_t uc_freerun)
 {
-	p_adc->ADC_MR |= trigger | ((uc_freerun << 7) & ADC_MR_FREERUN);
+	//Warning ADC_MR_TRGSEL_Msk does not include ADC_MR_TRGEN.
+	p_adc->ADC_MR &= ~(ADC_MR_TRGEN | ADC_MR_TRGSEL_Msk | ADC_MR_FREERUN); //Clear all bits related to triggers and freerun
+	
+	//Configure FreeRun
+	if(uc_freerun & ADC_MR_FREERUN == ADC_MR_FREERUN_ON) {                 //FreeRun is enabled
+		p_adc->ADC_MR |= ADC_MR_FREERUN_ON;
+		
+		//Free Run Mode: Never wait for any trigger
+		//No need to continue and enable hardware triggers
+		return;
+	}
+	
+	//Configure hardware triggers
+	if(trigger & ADC_MR_TRGEN == ADC_MR_TRGEN_EN) {                       //Hardware trigger is enabled
+		p_adc->ADC_MR |= (trigger & ADC_MR_TRGSEL_Msk) | ADC_MR_TRGEN_EN; //Set trigger selection bits and enable hardware trigger
+	}
 }
 #elif SAM3U_SERIES
 /**
- * \brief Configure conversion trigger and free run mode.
+ * \brief Configure conversion trigger.
  *
  * \param p_adc Pointer to an ADC instance.
  * \param trigger Conversion trigger.
  */
 void adc_configure_trigger(Adc *p_adc, const enum adc_trigger_t trigger)
 {
-	p_adc->ADC_MR |= trigger;
+	//Warning ADC_MR_TRGSEL_Msk does not include ADC_MR_TRGEN.
+	p_adc->ADC_MR &= ~(ADC_MR_TRGEN | ADC_MR_TRGSEL_Msk);                  //Clear all bits related to triggers
+	
+	//Configure hardware triggers
+	if(trigger & ADC_MR_TRGEN == ADC_MR_TRGEN_EN) {                        //Hardware trigger is enabled
+		p_adc->ADC_MR |= (trigger & ADC_MR_TRGSEL_Msk) | ADC_MR_TRGEN_EN;  //Set trigger selection bits and enable hardware trigger
+	}
 }
 #endif
 

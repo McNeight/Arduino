@@ -1,4 +1,4 @@
-	/***************************************************
+/***************************************************
   This is a library for the Adafruit 1.8" SPI display.
   This library works with the Adafruit 1.8" TFT Breakout w/SD card
   ----> http://www.adafruit.com/products/358
@@ -26,6 +26,7 @@
  #include "WProgram.h"
 #endif
 #include "Adafruit_GFX.h"
+#include <SPI.h>
 #include <avr/pgmspace.h>
 
 // some flags for initR() :(
@@ -102,6 +103,7 @@ class Adafruit_ST7735 : public Adafruit_GFX {
   Adafruit_ST7735(uint8_t CS, uint8_t RS, uint8_t RST);
 
   void     initB(void),                             // for ST7735B displays
+           initG(void),                             // for ILI9163C displays
            initR(uint8_t options = INITR_GREENTAB), // for ST7735R
            setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1),
            pushColor(uint16_t color),
@@ -129,12 +131,15 @@ class Adafruit_ST7735 : public Adafruit_GFX {
   void     spiwrite(uint8_t),
            writecommand(uint8_t c),
            writedata(uint8_t d),
-           commandList(uint8_t *addr),
-           commonInit(uint8_t *cmdList);
+           commandList(const uint8_t *addr),
+           commonInit(const uint8_t *cmdList);
 //uint8_t  spiread(void);
 
   boolean  hwSPI;
- #if defined(ARDUINO_ARCH_SAM)
+#ifdef SPI_HAS_TRANSACTION
+  SPISettings spisettings;
+#endif
+#if defined(ARDUINO_ARCH_SAM)
   volatile uint32_t *dataport, *clkport, *csport, *rsport;
   uint32_t  _cs, _rs, _rst, _sid, _sclk,
            datapinmask, clkpinmask, cspinmask, rspinmask,
