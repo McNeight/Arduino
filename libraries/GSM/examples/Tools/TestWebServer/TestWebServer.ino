@@ -1,22 +1,22 @@
 /*
   Basic Web Server
- 
+
  A simple web server that replies with nothing, but prints the client's request
  and the server IP address.
 
  Circuit:
  * GSM shield attached
- 
- created 
+
+ created
  by David Cuartielles
  modified 21 Nov 2012
  by Tom Igoe
- 
- http://arduino.cc/en/Tutorial/GSMToolsTestWebServer
- 
+
+ http://www.arduino.cc/en/Tutorial/GSMToolsTestWebServer
+
  This example code is part of the public domain
  */
- #include <GSM.h>
+#include <GSM.h>
 
 // PIN Number
 #define PINNUMBER ""
@@ -33,10 +33,9 @@ GSM gsmAccess;     // include a 'true' parameter for debug enabled
 GSMServer server(80); // port 80 (http default)
 
 // timeout
-const unsigned long __TIMEOUT__ = 10*1000;
+const unsigned long __TIMEOUT__ = 10 * 1000;
 
-void setup()
-{
+void setup() {
   // initialize serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
@@ -49,13 +48,11 @@ void setup()
 
   // Start GSM shield
   // If your SIM has PIN, pass it as a parameter of begin() in quotes
-  while(!connected)
-  {
-    if((gsmAccess.begin(PINNUMBER)==GSM_READY) &
-        (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD)==GPRS_READY))
+  while (!connected) {
+    if ((gsmAccess.begin(PINNUMBER) == GSM_READY) &
+        (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD) == GPRS_READY)) {
       connected = true;
-    else
-    {
+    } else {
       Serial.println("Not connected");
       delay(1000);
     }
@@ -72,14 +69,14 @@ void setup()
   Serial.println(LocalIP);
 }
 
-void loop(){
+void loop() {
   GSMClient client = server.available();
-  
- if (client) {
-   if (client.available()) {
-    Serial.write(client.read()); 
-   }
-}
+
+  if (client) {
+    if (client.available()) {
+      Serial.write(client.read());
+    }
+  }
 
 }
 
